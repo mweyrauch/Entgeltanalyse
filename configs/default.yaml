@@ -1,0 +1,14 @@
+# Simulationsstudie zur bereinigten Entgeltluecke
+study:
+  scenarios: [linear, nonlinear, proxy]
+  n: 3000              # Beschaeftigte je simuliertem Unternehmen
+  reps: 100            # Wiederholungen je Szenario
+  gap: -0.05           # eingebaute direkte Luecke in Log-Punkten (~ -4.9 %)
+  seed: 0
+
+methods:
+  folds: 5             # Cross-Fitting bei Double Machine Learning
+  model_params:        # HistGradientBoosting fuer alle ML-Modelle
+    max_iter: 200
+    learning_rate: 0.05
+    max_leaf_nodes: 15
