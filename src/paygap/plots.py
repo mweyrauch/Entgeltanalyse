@@ -71,3 +71,61 @@ def plot_study(runs, path) -> None:
     fig.tight_layout(rect=(0, 0.08, 1, 1))
     fig.savefig(path, dpi=150)
     plt.close(fig)
+
+
+ZIP_COVERED = "#C5CCD6"      # Intervall enthaelt die wahre Luecke
+ZIP_MISSED = "#D9737A"       # Intervall verfehlt sie
+
+
+def plot_zip(runs, path, methods=("ols", "ml_ob", "dml")) -> None:
+    """Zip-Plot (Morris, White & Crowther 2019): alle 95-%-Intervalle je Methode und Szenario.
+
+    Die Intervalle sind von unten nach oben nach |Schaetzung - wahre Luecke| / Standardfehler
+    sortiert. Bei korrekter Abdeckung verfehlen nur die obersten 5 % die wahre Luecke.
+    Der Standardfehler wird aus der Intervallbreite zurueckgerechnet.
+    """
+    from matplotlib.lines import Line2D
+
+    scenarios = list(dict.fromkeys(runs["scenario"]))
+    methods = [m for m in methods if m in set(runs["method"])]
+    fig, axes = plt.subplots(len(methods), len(scenarios),
+                             figsize=(4.4 * len(scenarios), 3.3 * len(methods)),
+                             sharex=True, sharey=True, squeeze=False)
+    for j, s in enumerate(scenarios):
+        for i, m in enumerate(methods):
+            ax = axes[i, j]
+            d = runs[(runs["scenario"] == s) & (runs["method"] == m)]
+            se = (d["hi"] - d["lo"]) / (2 * 1.959963984540054)
+            order = np.argsort(np.abs((d["est"] - d["true_direct"]) / se).to_numpy(),
+                               kind="stable")
+            d = d.iloc[order]
+            y = 100 * (np.arange(len(d)) + 0.5) / len(d)
+            truth = d["true_direct"].to_numpy()
+            cov = ((d["lo"] <= truth) & (truth <= d["hi"])).to_numpy()
+            lo, hi, est = to_percent(d["lo"]), to_percent(d["hi"]), to_percent(d["est"])
+            ax.hlines(y[cov], lo[cov], hi[cov], color=ZIP_COVERED, lw=2.2)
+            ax.hlines(y[~cov], lo[~cov], hi[~cov], color=ZIP_MISSED, lw=2.2)
+            ax.scatter(est, y, s=6, color="#555555", marker=METHOD_STYLES[m]["marker"],
+                       zorder=3)
+            ax.axvline(to_percent(truth[0]), color="#6A6A9A", ls="--", lw=1.2)
+            ax.axhline(95, color="#888888", ls=":", lw=1.2)
+            ax.text(0.98, 0.04, f"Abdeckung {cov.mean():.0%}", transform=ax.transAxes,
+                    ha="right", fontsize=9, bbox={"fc": "white", "ec": "none", "alpha": 0.8})
+            ax.set_ylim(0, 100)
+            ax.grid(axis="x", alpha=0.3)
+            if i == 0:
+                ax.set_title(SCENARIO_LABELS.get(s, s), fontsize=10)
+            if j == 0:
+                ax.set_ylabel(f"{METHOD_LABELS[m]}\n\nRang nach |Abweichung| / SE (%)")
+            if i == len(methods) - 1:
+                ax.set_xlabel("95-%-Intervall der Entgeltlücke (%)")
+    handles = [
+        Line2D([], [], color=ZIP_COVERED, lw=2.2, label="Intervall enthält wahre Lücke"),
+        Line2D([], [], color=ZIP_MISSED, lw=2.2, label="Intervall verfehlt wahre Lücke"),
+        Line2D([], [], color="#6A6A9A", ls="--", label="wahre direkte Lücke"),
+        Line2D([], [], color="#888888", ls=":", label="95-%-Marke"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False)
+    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.savefig(path, dpi=140)
+    plt.close(fig)

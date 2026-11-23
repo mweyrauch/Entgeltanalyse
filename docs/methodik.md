@@ -11,7 +11,7 @@ hier ist er bekannt, und deshalb lässt sich messen, wie weit jede Methode daneb
 Im Szenario mit seltenerer Beförderung gibt es zusätzlich die **Gesamtlücke**: Für jede Frau wird
 berechnet, was sie verdienen würde, wenn sie in allem wie ein Mann behandelt würde, also auch die
 Entgeltstufe erreicht hätte, die ein Mann mit ihrer Qualifikation erreicht. Der Mittelwert dieser
-Differenzen ist die Gesamtlücke (≈ −9,6 %). Weil die Methoden die Entgeltstufe als Merkmal
+Differenzen ist die Gesamtlücke (≈ −9,5 %). Weil die Methoden die Entgeltstufe als Merkmal
 herausrechnen, können sie nur die direkte Lücke sehen.
 
 ## Grundidee von Double Machine Learning

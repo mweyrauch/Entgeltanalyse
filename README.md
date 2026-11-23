@@ -16,29 +16,56 @@ Methode danebenliegt.
 ## Kernergebnis
 
 Bei nichtlinearer Entgeltstruktur überschätzt die übliche lineare Regression die Lücke um knapp
-einen Prozentpunkt, und ihr 95-%-Intervall enthält den wahren Wert nur in 80 % der Fälle.
-**Double Machine Learning trifft die Lücke in allen Szenarien bis auf 0,2 Prozentpunkte** und hält
-die nominelle Intervallabdeckung ein. Keine Methode erkennt aber Benachteiligung, die über die
+einen Prozentpunkt, und ihr 95-%-Intervall enthält den wahren Wert nur in 72 % der Fälle.
+**Double Machine Learning trifft die Lücke in allen Szenarien bis auf 0,1 Prozentpunkte** und hält
+die nominelle Intervallabdeckung von 95 % ein. Keine Methode erkennt aber Benachteiligung, die über die
 herausgerechneten Merkmale selbst wirkt (hier: seltenere Beförderung).
 
 ![Simulationsstudie](docs/figures/study.png)
 
+*Jeder Punkt ist die Schätzung aus einem simulierten Datensatz. Die Box umfasst die mittleren 50 %
+der Schätzungen, der Strich darin ist der Median, die Fehlerbalken reichen bis zur äußersten
+Schätzung innerhalb des 1,5-Fachen der Boxbreite. Die Abbildung zeigt Verzerrung und Streuung,
+nicht die Konfidenzintervalle.*
+
 | Szenario | Methode | Schätzung | Verzerrung | Abdeckung 95-%-Intervall |
 |---|---|---:|---:|---:|
-| linear | Lineare Regression | −4,8 % | +0,1 pp | 100 % |
-| | ML-Oaxaca-Blinder | −5,3 % | −0,4 pp | 63 % |
-| | Double Machine Learning | −4,8 % | +0,1 pp | 100 % |
-| nichtlinear | Lineare Regression | −5,7 % | −0,8 pp | 80 % |
-| | ML-Oaxaca-Blinder | −5,1 % | −0,3 pp | 60 % |
-| | Double Machine Learning | −4,7 % | +0,2 pp | 100 % |
-| + seltenere Beförderung | Lineare Regression | −6,0 % | −1,1 pp | 57 % |
-| | ML-Oaxaca-Blinder | −4,8 % | 0,0 pp | 40 % |
-| | Double Machine Learning | −4,7 % | +0,2 pp | 93 % |
+| linear | Lineare Regression | −4,9 % | 0,0 pp | 100 % |
+| | ML-Oaxaca-Blinder | −5,4 % | −0,5 pp | 56 % |
+| | Double Machine Learning | −4,9 % | 0,0 pp | 97 % |
+| nichtlinear | Lineare Regression | −5,8 % | −0,9 pp | 72 % |
+| | ML-Oaxaca-Blinder | −5,3 % | −0,4 pp | 53 % |
+| | Double Machine Learning | −4,8 % | 0,0 pp | 98 % |
+| + seltenere Beförderung | Lineare Regression | −6,0 % | −1,1 pp | 53 % |
+| | ML-Oaxaca-Blinder | −4,9 % | 0,0 pp | 54 % |
+| | Double Machine Learning | −4,8 % | +0,1 pp | 94 % |
 
 Wahre direkte Lücke −4,9 %; im dritten Szenario beträgt die Gesamtlücke einschließlich seltenerer
-Beförderung −9,6 %. Unbereinigt liegen die Werte bei −7,6 %, −8,5 % und −13,0 %. 3000 Beschäftigte
-je simuliertem Unternehmen, **30 Wiederholungen** je Szenario (vorläufig; die Abdeckungswerte sind
-daher auf etwa ±8 Prozentpunkte genau).
+Beförderung −9,5 %. Unbereinigt liegen die Werte bei −7,7 %, −8,7 % und −13,1 %. 3000 Beschäftigte
+je simuliertem Unternehmen, 100 Wiederholungen je Szenario; die Abdeckungswerte sind damit auf etwa
+±4 Prozentpunkte genau. Die RMSE von Double Machine Learning liegt in allen Szenarien bei
+0,6 Log-Punkten × 100, die der linearen Regression steigt von 0,5 auf 1,4.
+
+### Stimmen die Konfidenzintervalle?
+
+![Zip-Plot](docs/figures/zip_plot.png)
+
+*Zip-Plot (Morris, White & Crowther, 2019): jede Linie ist das 95-%-Intervall aus einem simulierten
+Datensatz, der Punkt die Schätzung. Von unten nach oben sind die Intervalle nach dem Abstand der
+Schätzung zur wahren Lücke sortiert, gemessen in Standardfehlern. Rot sind Intervalle, die die wahre
+Lücke verfehlen. Bei korrekten Intervallen liegt Rot nur oberhalb der 95-%-Marke, gleichmäßig auf
+beiden Seiten.*
+
+Die beiden schwächeren Methoden scheitern aus verschiedenen Gründen:
+
+- **Lineare Regression:** Bei nichtlinearer Entgeltstruktur sind alle Intervalle nach links
+  verschoben, und alle verfehlenden Intervalle liegen links der wahren Lücke. Die Intervallbreite
+  stimmt, die Schätzung ist verzerrt, weil die Modellannahme nicht passt.
+- **ML-Oaxaca-Blinder:** Rot beginnt schon bei etwa 55 %, weil die Intervalle etwa halb so breit
+  sind, wie die tatsächliche Streuung verlangt. In den ersten beiden Szenarien kommt eine leichte
+  Verschiebung nach links hinzu; im dritten liegt die Schätzung im Mittel richtig, und Rot verteilt
+  sich auf beide Seiten.
+- **Double Machine Learning:** Rot erscheint erst oberhalb der 95-%-Marke und auf beiden Seiten.
 
 ## Vorgehen
 
@@ -62,7 +89,7 @@ daher auf etwa ±8 Prozentpunkte genau).
    - **Double Machine Learning:** Zwei Gradient-Boosting-Modelle sagen Entgelt und Geschlecht aus
      den Merkmalen vorher (mit 5-fachem Cross-Fitting). Die Lücke ergibt sich aus der Regression der
      Restgrößen aufeinander und hat ein gültiges Konfidenzintervall, obwohl die Modelle flexibel sind
-     (Chernozhukov et al., 2018).
+     (Chernozhukov et al., 2018). Die Grundidee ist in [docs/methodik.md](docs/methodik.md) erklärt.
 3. **Simulationsstudie** (`paygap/study.py`): je Szenario viele unabhängige Datensätze; gemessen
    werden Verzerrung, RMSE und wie oft das 95-%-Intervall die wahre Lücke enthält.
 4. **Überlappungsdiagnose:** Das Geschlechtsmodell aus Double Machine Learning zeigt, wo es kaum
@@ -91,7 +118,6 @@ daher auf etwa ±8 Prozentpunkte genau).
   arbeiten, nicht wie groß die Lücke in einem echten Unternehmen ist.
 - Bisher wird nur eine Gesamtlücke geschätzt; die Richtlinie verlangt Auswertungen je Gruppe
   gleichwertiger Arbeit.
-- Vorläufig 30 Wiederholungen je Szenario.
 
 ## Ausführen
 
@@ -115,10 +141,11 @@ configs/default.yaml     Studienparameter und Modellparameter
 src/paygap/generate.py   synthetische Personaldaten mit bekannter Lücke
 src/paygap/methods.py    Schätzer: unbereinigt, OLS, ML-Oaxaca-Blinder, Double ML
 src/paygap/study.py      Simulationsstudie und Kennzahlen
-src/paygap/plots.py      Abbildung
+src/paygap/plots.py      Abbildungen (Verteilung der Schätzungen, Zip-Plot)
 scripts/                 analyze.py (ein Datensatz), run_study.py (Studie)
 tests/                   pytest
-docs/                    Abbildung und Kennzahlen des letzten Studienlaufs
+docs/methodik.md         wahre Lücke und Grundidee von Double Machine Learning
+docs/figures, results    Abbildung und Kennzahlen des letzten Studienlaufs
 ```
 
 ## Nächste Schritte

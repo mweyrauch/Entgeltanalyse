@@ -1,6 +1,6 @@
 import pandas as pd
 
-from paygap.plots import plot_study, to_percent
+from paygap.plots import plot_study, plot_zip, to_percent
 from paygap.study import run_study, summarize
 
 
@@ -23,6 +23,8 @@ def test_small_study_and_plot(tmp_path):
     assert set(summarize(runs)["method"]) == {"raw", "ols", "ml_ob", "dml"}
     plot_study(runs, tmp_path / "study.png")
     assert (tmp_path / "study.png").stat().st_size > 0
+    plot_zip(runs, tmp_path / "zip.png")
+    assert (tmp_path / "zip.png").stat().st_size > 0
 
 
 def test_to_percent():

@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 from paygap.config import load_config
-from paygap.plots import METHOD_LABELS, plot_study, to_percent
+from paygap.plots import METHOD_LABELS, plot_study, plot_zip, to_percent
 from paygap.study import run_study, summarize
 
 
@@ -40,6 +40,7 @@ def main() -> None:
     runs.to_csv(out / "study_runs.csv", index=False)
     summary.to_csv(out / "study_summary.csv", index=False)
     plot_study(runs, out / "figures" / "study.png")
+    plot_zip(runs, out / "figures" / "zip_plot.png")
     (out / "run_info.json").write_text(json.dumps(
         {"config": cfg, "seconds": round(time.time() - t0)}, indent=2), encoding="utf-8")
 
